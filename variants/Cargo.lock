@@ -925,6 +925,7 @@ dependencies = [
  "procps",
  "selinux-policy",
  "systemd",
+ "systemd-bootchart",
  "util-linux",
  "wicked",
 ]
@@ -961,6 +962,14 @@ dependencies = [
  "libselinux",
  "libxcrypt",
  "util-linux",
+]
+
+[[package]]
+name = "systemd-bootchart"
+version = "0.1.0"
+dependencies = [
+ "glibc",
+ "systemd",
 ]
 
 [[package]]

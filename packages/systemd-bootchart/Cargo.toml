@@ -1,0 +1,20 @@
+[package]
+name = "systemd-bootchart"
+version = "0.1.0"
+edition = "2018"
+publish = false
+build = "build.rs"
+
+[lib]
+path = "pkg.rs"
+
+[package.metadata.build-package]
+releases-url = "https://github.com/systemd/systemd-bootchart/releases"
+
+[[package.metadata.build-package.external-files]]
+url = "https://github.com/systemd/systemd-bootchart/releases/download/v234/systemd-bootchart-234.tar.xz"
+sha512 = "9fed792fea82c6355ae48d58b0184bd7f32d74fe55142e12e1eb17095a6adcd95a2d1525747aa859ab4814002f5c145e6347aeffb8fbed63c1b34869c150d089"
+
+[build-dependencies]
+glibc = { path = "../glibc" }
+systemd = { path = "../systemd" }

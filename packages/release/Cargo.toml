@@ -43,5 +43,6 @@ policycoreutils = { path = "../policycoreutils" }
 procps = { path = "../procps" }
 selinux-policy = { path = "../selinux-policy" }
 systemd = { path = "../systemd" }
+systemd-bootchart = { path = "../systemd-bootchart" }
 util-linux = { path = "../util-linux" }
 wicked = { path = "../wicked" }

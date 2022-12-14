@@ -617,7 +617,6 @@ docker run --rm \
 # Builds a package including its build-time and runtime dependency packages.
 [tasks.build-package]
 dependencies = ["check-cargo-version", "fetch-sdk", "build-tools", "publish-setup", "fetch-licenses"]
-script_runner = "bash"
 script = [
 '''
 set -e
