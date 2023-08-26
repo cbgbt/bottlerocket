@@ -1,4 +1,5 @@
 use lazy_static::lazy_static;
+use rand_derive2::RandGen;
 use regex::Regex;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 // Just need serde's Error in scope to get its trait methods
@@ -16,9 +17,16 @@ use std::ops::Deref;
 /// ECSAttributeKey represents a string that contains a valid ECS attribute key.  It stores
 /// the original string and makes it accessible through standard traits.
 // https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Attribute.html
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Scalar)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Scalar, RandGen)]
 pub struct ECSAttributeKey {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForECSAttributeKey for ECSAttributeKey {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        crate::rando_alphanumeric_constrained(rng, 1, 128)
+    }
 }
 
 // The name of the attribute. The name must contain between 1 and 128
@@ -87,9 +95,20 @@ mod test_ecs_attribute_key {
 /// ECSAttributeValue represents a string that contains a valid ECS attribute value.  It stores
 /// the original string and makes it accessible through standard traits.
 // https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Attribute.html
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct ECSAttributeValue {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForECSAttributeValue for ECSAttributeValue {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        format!(
+            "{}   {}",
+            crate::rando_alphanumeric_constrained(rng, 1, 60),
+            crate::rando_alphanumeric_constrained(rng, 1, 60)
+        )
+    }
 }
 
 // The value of the attribute. The value must contain between 1 and 128
@@ -174,7 +193,7 @@ mod test_ecs_attribute_value {
 // =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=
 
 /// ECSAgentLogLevel represents a string that contains a valid ECS log level for the ECS agent.
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar, RandGen)]
 #[serde(rename_all = "lowercase")]
 pub enum ECSAgentLogLevel {
     Debug,
@@ -210,7 +229,7 @@ mod test_ecs_agent_log_level {
 // =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=
 
 /// ECSAgentImagePullBehavior represents a valid ECS Image Pull Behavior for the ECS agent.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar, RandGen)]
 #[serde(rename_all = "kebab-case")]
 #[repr(u8)]
 pub enum ECSAgentImagePullBehavior {
@@ -247,9 +266,16 @@ mod test_ecs_agent_image_pull_behavior {
 }
 
 /// ECSDurationValue represents a string that contains a valid ECS duration value
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct ECSDurationValue {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForECSDurationValue for ECSDurationValue {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        crate::rando_duration(rng)
+    }
 }
 
 lazy_static! {

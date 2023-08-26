@@ -72,6 +72,7 @@ pub fn model(args: TokenStream, input: TokenStream) -> TokenStream {
 struct ParsedArgs {
     rename: Option<String>,
     impl_default: Option<bool>,
+    no_dist: Option<bool>,
     add_option: Option<bool>,
 }
 
@@ -80,6 +81,7 @@ struct ParsedArgs {
 struct ModelHelper {
     rename: Option<String>,
     impl_default: bool,
+    no_dist: bool,
     add_option: bool,
 }
 
@@ -90,6 +92,7 @@ impl From<ParsedArgs> for ModelHelper {
         ModelHelper {
             rename: args.rename,
             impl_default: args.impl_default.unwrap_or(false),
+            no_dist: args.no_dist.unwrap_or(false),
             add_option: args.add_option.unwrap_or(true),
         }
     }
@@ -122,10 +125,19 @@ impl VisitMut for ModelHelper {
         // Add our derives, if the user hasn't set any
         if !is_attr_set("derive", &node.attrs) {
             // Derive Default, if the user requested
-            let attr = if self.impl_default {
-                parse_quote!(#[derive(Debug, Default, PartialEq, Serialize, Deserialize)])
-            } else {
-                parse_quote!(#[derive(Debug, PartialEq, Serialize, Deserialize)])
+            let attr = match (self.impl_default, self.no_dist) {
+                (true, false) => parse_quote!(
+                    #[derive(Debug, Default, PartialEq, Serialize, Deserialize, rand_derive2::RandGen)]
+                ),
+                (false, false) => parse_quote!(
+                    #[derive(Debug, PartialEq, Serialize, Deserialize, rand_derive2::RandGen)]
+                ),
+                (true, true) => parse_quote!(
+                    #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
+                ),
+                (false, true) => parse_quote!(
+                    #[derive(Debug, PartialEq, Serialize, Deserialize)]
+                ),
             };
             // Rust 1.52 added a legacy_derive_helpers warning (soon to be an error) that yells if
             // you use an attribute macro before the derive macro that introduces it.  We should

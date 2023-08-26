@@ -1358,6 +1358,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam-deque"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce6fd6f855243022dcecf8702fef0c297d4338e226845fe067f6341ad9fa0cef"
+dependencies = [
+ "cfg-if",
+ "crossbeam-epoch",
+ "crossbeam-utils",
+]
+
+[[package]]
+name = "crossbeam-epoch"
+version = "0.9.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae211234986c545741a7dc064309f67ee1e5ad243d0e48335adc0484d960bcc7"
+dependencies = [
+ "autocfg",
+ "cfg-if",
+ "crossbeam-utils",
+ "memoffset 0.9.0",
+ "scopeguard",
+]
+
+[[package]]
 name = "crossbeam-utils"
 version = "0.8.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2425,6 +2449,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "memoffset"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a634b1c61a95585bd15607c6ab0c4e5b226e695ff2800ba0cdccddf208c406c"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "merge-toml"
 version = "0.1.0"
 dependencies = [
@@ -2527,7 +2560,19 @@ dependencies = [
  "darling",
  "generate-readme",
  "quote",
+ "rand_derive2",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "model-randgen"
+version = "0.1.0"
+dependencies = [
+ "models",
+ "rand",
+ "rayon",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -2544,6 +2589,8 @@ dependencies = [
  "libc",
  "model-derive",
  "rand",
+ "rand_derive2",
+ "rcgen",
  "regex",
  "scalar",
  "scalar-derive",
@@ -2594,7 +2641,7 @@ dependencies = [
  "bitflags",
  "cfg-if",
  "libc",
- "memoffset",
+ "memoffset 0.7.1",
  "pin-utils",
  "static_assertions",
 ]
@@ -2883,6 +2930,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "pem"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b13fe415cdf3c8e44518e18a7c95a13431d9bdf6d15367d82b23c377fdd441a"
+dependencies = [
+ "base64 0.21.2",
+ "serde",
+]
+
+[[package]]
 name = "pentacle"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3034,6 +3091,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "proc_macro2_helper"
+version = "0.2.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79528bef70da112116feb5ecb6b64f1394e5360660d6474a760789ea07885501"
+dependencies = [
+ "proc-macro2",
+ "syn 2.0.29",
+]
+
+[[package]]
 name = "public-admin-container-v0-10-0"
 version = "0.1.0"
 dependencies = [
@@ -3136,6 +3203,52 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
+]
+
+[[package]]
+name = "rand_derive2"
+version = "0.1.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e07d80c051ce2007c5cbb87ae0a6be7c5e5345cb03e06717b64ed5c426cbfb3"
+dependencies = [
+ "proc-macro2",
+ "proc_macro2_helper",
+ "quote",
+ "syn 2.0.29",
+]
+
+[[package]]
+name = "rayon"
+version = "1.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d2df5196e37bcc87abebc0053e20787d73847bb33134a69841207dd0a47f03b"
+dependencies = [
+ "either",
+ "rayon-core",
+]
+
+[[package]]
+name = "rayon-core"
+version = "1.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b8f95bd6966f5c87776639160a66bd8ab9895d9d4ab01ddba9fc60661aebe8d"
+dependencies = [
+ "crossbeam-channel",
+ "crossbeam-deque",
+ "crossbeam-utils",
+ "num_cpus",
+]
+
+[[package]]
+name = "rcgen"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4954fbc00dcd4d8282c987710e50ba513d351400dbdd00e803a05172a90d8976"
+dependencies = [
+ "pem 2.0.1",
+ "ring",
+ "time",
+ "yasna",
 ]
 
 [[package]]
@@ -4134,7 +4247,7 @@ dependencies = [
  "log",
  "olpc-cjson",
  "path-absolutize",
- "pem",
+ "pem 1.1.1",
  "percent-encoding",
  "reqwest",
  "ring",
@@ -4732,6 +4845,15 @@ name = "xmlparser"
 version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4d25c75bf9ea12c4040a97f829154768bbbce366287e2dc044af160cd79a13fd"
+
+[[package]]
+name = "yasna"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e17bb3549cc1321ae1296b9cdc2698e2b6cb1992adfa19a8c72e5b7a738f44cd"
+dependencies = [
+ "time",
+]
 
 [[package]]
 name = "zeroize"

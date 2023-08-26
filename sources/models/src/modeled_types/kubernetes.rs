@@ -1,9 +1,11 @@
 use lazy_static::lazy_static;
+use rand::{distributions::Standard, prelude::Distribution, Rng};
 use regex::Regex;
 use scalar_derive::Scalar;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 // Just need serde's Error in scope to get its trait methods
 use super::error;
+use rand_derive2::RandGen;
 use serde::de::Error as _;
 use serde_json::Value;
 use snafu::{ensure, ResultExt};
@@ -24,9 +26,20 @@ const IMAGE_GC_THRESHOLD_MIN: i32 = 0;
 /// KubernetesName represents a string that contains a valid Kubernetes resource name.  It stores
 /// the original string and makes it accessible through standard traits.
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesName {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesName for KubernetesName {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        format!(
+            "{}.-{}",
+            crate::rando_alphanumeric_constrained(rng, 0, 124),
+            crate::rando_alphanumeric_constrained(rng, 0, 124)
+        )
+    }
 }
 
 lazy_static! {
@@ -78,9 +91,21 @@ mod test_kubernetes_name {
 /// KubernetesLabelKey represents a string that contains a valid Kubernetes label key.  It stores
 /// the original string and makes it accessible through standard traits.
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesLabelKey {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesLabelKey for KubernetesLabelKey {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        format!(
+            "{}/{}.-{}",
+            crate::rando_alphanumeric_constrained(rng, 1, 253),
+            crate::rando_alphanumeric_constrained(rng, 1, 5),
+            crate::rando_alphanumeric_constrained(rng, 1, 30),
+        )
+    }
 }
 
 lazy_static! {
@@ -154,9 +179,20 @@ mod test_kubernetes_label_key {
 /// KubernetesLabelValue represents a string that contains a valid Kubernetes label value.  It
 /// stores the original string and makes it accessible through standard traits.
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesLabelValue {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesLabelValue for KubernetesLabelValue {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        if rng.gen::<f64>() < 0.1 {
+            String::new()
+        } else {
+            crate::rando_alphanumeric_constrained(rng, 1, 30)
+        }
+    }
 }
 
 lazy_static! {
@@ -226,9 +262,24 @@ mod test_kubernetes_label_value {
 // the syntax of the effect.
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
 // https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesTaintValue {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesTaintValue for KubernetesTaintValue {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        if rng.gen::<f64>() < 0.5 {
+            format!(
+                "{}:{}",
+                crate::rando_alphanumeric_constrained(rng, 1, 30),
+                crate::rando_alphanumeric_constrained(rng, 1, 60)
+            )
+        } else {
+            crate::rando_alphanumeric_constrained(rng, 1, 60)
+        }
+    }
 }
 
 lazy_static! {
@@ -310,9 +361,16 @@ mod test_kubernetes_taint_value {
 // Note: I was unable to find the rules for cluster naming.  We know they have to fit into label
 // values, because of the common cluster-name label, but they also can't be empty.  This combines
 // those two characteristics into a new type, until we find an explicit syntax.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesClusterName {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesClusterName for KubernetesClusterName {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        crate::rando_alphanumeric_constrained(rng, 1, 30)
+    }
 }
 
 impl TryFrom<&str> for KubernetesClusterName {
@@ -366,9 +424,16 @@ mod test_kubernetes_cluster_name {
 
 /// KubernetesAuthenticationMode represents a string that is a valid authentication mode for the
 /// kubelet.  It stores the original string and makes it accessible through standard traits.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesAuthenticationMode {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesAuthenticationMode for KubernetesAuthenticationMode {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        if rng.gen() { "aws" } else { "tls" }.to_string()
+    }
 }
 
 impl TryFrom<&str> for KubernetesAuthenticationMode {
@@ -412,9 +477,20 @@ mod test_kubernetes_authentication_mode {
 /// KubernetesBootstrapToken represents a string that is a valid bootstrap token for Kubernetes.
 /// It stores the original string and makes it accessible through standard traits.
 // https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesBootstrapToken {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesBootstrapToken for KubernetesBootstrapToken {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        format!(
+            "{}.{}",
+            crate::rando_alphanumeric_constrained(rng, 6, 7),
+            crate::rando_alphanumeric_constrained(rng, 16, 17)
+        )
+    }
 }
 
 lazy_static! {
@@ -467,7 +543,7 @@ mod test_kubernetes_bootstrap_token {
 /// KubernetesEvictionKey represents a string that contains a valid Kubernetes eviction key.
 /// https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar, RandGen)]
 #[serde(rename_all = "lowercase")]
 pub enum KubernetesEvictionKey {
     #[serde(rename = "memory.available")]
@@ -515,9 +591,21 @@ mod test_kubernetes_eviction_key {
 
 /// KubernetesThresholdValue represents a string that contains a valid kubernetes threshold value.
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesThresholdValue {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesThresholdValue for KubernetesThresholdValue {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        match rng.gen::<f64>() {
+            f if f < 0.33 => format!("{}u", rng.gen::<i32>()),
+            f if f < 0.45 => format!("{}Mi", rng.gen::<i32>()),
+            f if f < 0.66 => format!("{}", rng.gen::<i32>()),
+            _ => format!("{}e{}", rng.gen_range(1..1000), rng.gen_range(1..4)),
+        }
+    }
 }
 
 // Regular expression of Kubernetes quantity. i.e. 128974848, 129e6, 129M, 123Mi
@@ -602,12 +690,24 @@ mod test_kubernetes_threshold_value {
 /// and systemReserved resources i.e. cpu, memory.
 /// https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesReservedResourceKey {
+    #[rand_derive(custom)]
     inner: String,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize)]
+impl TestDataProviderForKubernetesReservedResourceKey for KubernetesReservedResourceKey {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        match rng.gen::<f64>() {
+            f if f < 0.33 => "cpu",
+            f if f < 0.66 => "memory",
+            _ => "ephemeral-storage",
+        }
+        .to_string()
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, RandGen)]
 #[serde(rename_all = "lowercase")]
 enum ReservedResources {
     Cpu,
@@ -660,9 +760,16 @@ mod test_reserved_resources_key {
 /// KubernetesQuantityValue represents a string that contains a valid kubernetes quantity value.
 /// https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesQuantityValue {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesQuantityValue for KubernetesQuantityValue {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        KubernetesThresholdValue::generate_random().inner
+    }
 }
 
 impl TryFrom<&str> for KubernetesQuantityValue {
@@ -721,9 +828,16 @@ mod test_kubernetes_quantity_value {
 
 /// KubernetesCloudProvider represents a string that is a valid cloud provider for the
 /// kubelet.  It stores the original string and makes it accessible through standard traits.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesCloudProvider {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesCloudProvider for KubernetesCloudProvider {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        ["aws", "external", "\"\""][rng.gen_range(0..3)].to_string()
+    }
 }
 
 impl TryFrom<&str> for KubernetesCloudProvider {
@@ -771,11 +885,19 @@ mod test_kubernetes_cloud_provider {
 /// CpuManagerPolicy represents a string that contains a valid cpu management policy. Default: none
 /// https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct CpuManagerPolicy {
+    #[rand_derive(custom)]
     inner: String,
 }
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize)]
+
+impl TestDataProviderForCpuManagerPolicy for CpuManagerPolicy {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        ["Static", "None", "static", "none"][rng.gen_range(0..4)].to_string()
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, RandGen)]
 #[serde(rename_all = "lowercase")]
 enum ValidCpuManagerPolicy {
     #[serde(alias = "Static")]
@@ -820,9 +942,17 @@ mod test_cpu_manager_policy {
 // =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=
 
 /// KubernetesDurationValue represents a string that contains a valid Kubernetes duration value.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KubernetesDurationValue {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKubernetesDurationValue for KubernetesDurationValue {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        crate::rando_duration(rng)
+    }
+
 }
 
 lazy_static! {
@@ -895,11 +1025,19 @@ mod test_kubernetes_duration_value {
 /// TopologyManagerScope represents a string that contains a valid topology management scope. Default: container
 /// https://kubernetes.io/docs/tasks/administer-cluster/topology-manager/
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct TopologyManagerScope {
+    #[rand_derive(custom)]
     inner: String,
 }
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize)]
+
+impl TestDataProviderForTopologyManagerScope for TopologyManagerScope {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        ["container", "pod"][rng.gen_range(0..2)].to_string()
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, RandGen)]
 #[serde(rename_all = "lowercase")]
 enum ValidTopologyManagerScope {
     Container,
@@ -944,11 +1082,19 @@ mod test_topology_manager_scope {
 /// TopologyManagerPolicy represents a string that contains a valid topology management policy. Default: none
 /// https://kubernetes.io/docs/tasks/administer-cluster/topology-manager/
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct TopologyManagerPolicy {
+    #[rand_derive(custom)]
     inner: String,
 }
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize)]
+
+impl TestDataProviderForTopologyManagerPolicy for TopologyManagerPolicy {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        serde_plain::to_string(&ValidTopologyManagerPolicy::generate_random()).unwrap()
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize, RandGen, Serialize)]
 #[serde(rename_all = "lowercase")]
 enum ValidTopologyManagerPolicy {
     None,
@@ -995,7 +1141,7 @@ mod test_topology_manager_policy {
 // =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=
 
 /// This enum is used by `IntegerPercent` to "remember" how the number was deserialized.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, RandGen)]
 enum IntegerPercentMode {
     Number,
     String,
@@ -1019,10 +1165,17 @@ enum IntegerPercentMode {
 /// Default: 85
 /// https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/
 ///
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, RandGen)]
 pub struct IntegerPercent {
+    #[rand_derive(custom)]
     value: i32,
     mode: IntegerPercentMode,
+}
+
+impl TestDataProviderForIntegerPercent for IntegerPercent {
+    fn generate_value<R: rand::Rng + ?Sized>(rng: &mut R) -> i32 {
+        rng.gen_range(0..100)
+    }
 }
 
 impl IntegerPercent {
@@ -1192,6 +1345,16 @@ pub enum KubernetesClusterDnsIp {
     Vector(Vec<IpAddr>),
 }
 
+impl Distribution<KubernetesClusterDnsIp> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> KubernetesClusterDnsIp {
+        if rng.gen() {
+            KubernetesClusterDnsIp::Scalar(crate::rando_ipaddr(rng))
+        } else {
+            KubernetesClusterDnsIp::Vector(crate::rando_ipaddrs(rng, 2, 5))
+        }
+    }
+}
+
 impl KubernetesClusterDnsIp {
     pub fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = &'a IpAddr> + 'a> {
         match self {
@@ -1302,21 +1465,40 @@ mod test_cluster_dns_ip {
 
 type EnvVarMap = HashMap<SingleLineString, SingleLineString>;
 
+use crate::{RandoHashmap, RandoVec};
+randogen_hashmap!(SingleLineString, SingleLineString);
+
 /// CredentialProvider contains the settings for a credential provider for use
 /// in CredentialProviderConfig.
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, RandGen)]
 #[serde(rename_all = "kebab-case")]
 pub struct CredentialProvider {
     enabled: bool,
+    #[rand_derive(custom)]
     image_patterns: Vec<SingleLineString>,
     cache_duration: Option<KubernetesDurationValue>,
+    #[rand_derive(custom)]
     environment: Option<EnvVarMap>,
+}
+
+impl TestDataProviderForCredentialProvider for CredentialProvider {
+    fn generate_environment<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<EnvVarMap> {
+        if rng.gen() {
+            Some(RandoHashmap::<SingleLineString, SingleLineString>::generate(rng, 1, 5))
+        } else {
+            None
+        }
+    }
+
+    fn generate_image_patterns<R: rand::Rng + ?Sized>(rng: &mut R) -> Vec<SingleLineString> {
+        RandoVec::<SingleLineString>::generate(rng, 1, 5)
+    }
 }
 
 // =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=
 
 /// KubernetesCPUManagerPolicyOption values are the possible option names for the cpuManagerPolicyOptions.
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar, RandGen)]
 pub enum KubernetesCPUManagerPolicyOption {
     #[serde(rename = "full-pcpus-only")]
     FullPCPUsOnly,
@@ -1346,7 +1528,7 @@ mod test_kubernetes_cpu_manager_policy_option {
 
 /// KubernetesMemoryReservationKey represents a string that contains a valid Kubernetes memory
 /// resource reservation key.
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar, RandGen)]
 pub enum KubernetesMemoryReservationKey {
     #[serde(rename = "memory")]
     Memory,
@@ -1376,17 +1558,28 @@ mod test_memory_reservation_key {
     }
 }
 
+randogen_hashmap!(KubernetesMemoryReservationKey, KubernetesQuantityValue);
+
 /// KubernetesMemoryReservation enables setting kubelet reserved memory values.
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, RandGen)]
 #[serde(rename_all = "kebab-case")]
 pub struct KubernetesMemoryReservation {
     enabled: bool,
     #[serde(flatten)]
+    #[rand_derive(custom)]
     limits: HashMap<KubernetesMemoryReservationKey, KubernetesQuantityValue>,
 }
 
+impl TestDataProviderForKubernetesMemoryReservation for KubernetesMemoryReservation {
+    fn generate_limits<R: rand::Rng + ?Sized>(
+        rng: &mut R,
+    ) -> HashMap<KubernetesMemoryReservationKey, KubernetesQuantityValue> {
+        RandoHashmap::<KubernetesMemoryReservationKey, KubernetesQuantityValue>::generate(rng, 1, 5)
+    }
+}
+
 /// KubernetesMemoryManagerPolicy represents the valid options for the memory manager policy.
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Scalar, RandGen)]
 pub enum KubernetesMemoryManagerPolicy {
     #[serde(alias = "static")]
     Static,

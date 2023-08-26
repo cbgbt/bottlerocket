@@ -1,5 +1,6 @@
 use super::error;
 use lazy_static::lazy_static;
+use rand_derive2::RandGen;
 use regex::Regex;
 use scalar::traits::{Scalar, Validate};
 use scalar::ValidationError;
@@ -22,9 +23,16 @@ use x509_parser;
 /// field in a model structure so that you don't even accept a request with a field that has
 /// invalid base64.
 // Note: we use the default base64::STANDARD config which uses/allows "=" padding.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct ValidBase64 {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForValidBase64 for ValidBase64 {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        base64::encode(crate::rando_alphanumeric(rng))
+    }
 }
 
 /// Validate base64 format before we accept the input.
@@ -66,9 +74,16 @@ mod test_valid_base64 {
 /// line.  It stores the original form and makes it accessible through standard traits.  Its
 /// purpose is input validation, for example in cases where you want to accept input for a
 /// configuration file and want to ensure a user can't create a new line with extra configuration.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct SingleLineString {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForSingleLineString for SingleLineString {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        crate::rando_alphanumeric(rng)
+    }
 }
 
 impl TryFrom<&str> for SingleLineString {
@@ -136,9 +151,16 @@ mod test_single_line_string {
 /// ValidLinuxHostname represents a string that contains a valid Linux hostname as defined by
 /// https://man7.org/linux/man-pages/man7/hostname.7.html.  It stores the original form and makes
 /// it accessible through standard traits.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct ValidLinuxHostname {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForValidLinuxHostname for ValidLinuxHostname {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        crate::rando_alphanumeric(rng)
+    }
 }
 
 lazy_static! {
@@ -236,13 +258,28 @@ mod test_valid_linux_hostname {
 
 /// EtcHostsEntries represents a mapping of IP Address to hostname aliases that can apply to those
 /// addresses.
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, RandGen)]
 #[serde(transparent)]
 pub struct EtcHostsEntries(
     // Ordering matters in /etc/hosts, and this setting directly maps to that file and its behavior in glibc.
     // Repeated IP Addresses have their host aliases merged to a single line, respecting the order as they appear in this list.
-    Vec<(IpAddr, Vec<ValidLinuxHostname>)>,
+    #[rand_derive(custom)] Vec<(IpAddr, Vec<ValidLinuxHostname>)>,
 );
+
+impl TestDataProviderForEtcHostsEntries for EtcHostsEntries {
+    fn generate_random_vec<R: rand::Rng + ?Sized>(
+        rng: &mut R,
+    ) -> Vec<(IpAddr, Vec<ValidLinuxHostname>)> {
+        (0..rng.gen_range(0..6))
+            .map(|_| {
+                (
+                    crate::rando_ipaddr(rng),
+                    (0..rng.gen_range(1..3)).map(|_| rng.gen()).collect(),
+                )
+            })
+            .collect()
+    }
+}
 
 impl EtcHostsEntries {
     pub fn iter_merged(&self) -> impl Iterator<Item = (IpAddr, Vec<ValidLinuxHostname>)> {
@@ -383,9 +420,16 @@ mod test_etc_hosts_entries {
 /// character in user-facing identifiers. It stores the original form and makes it accessible
 /// through standard traits. Its purpose is to validate input for identifiers like container names
 /// that might be used to create files/directories.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct Identifier {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForIdentifier for Identifier {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        crate::rando_alphanumeric_constrained(rng, 5, CONTAINERD_ID_LENGTH as u64)
+    }
 }
 
 const CONTAINERD_ID_LENGTH: usize = 76;
@@ -442,9 +486,21 @@ mod test_valid_identifier {
 /// allows URLs without a scheme (e.g. without "http://") because it's common.  It stores the
 /// original string and makes it accessible through standard traits. Its purpose is to validate
 /// input for any field containing a network address.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct Url {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForUrl for Url {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        let domain = crate::rando_domain(rng);
+        if rng.gen::<bool>() {
+            format!("http://{}", domain)
+        } else {
+            domain
+        }
+    }
 }
 
 impl TryFrom<&str> for Url {
@@ -512,9 +568,32 @@ mod test_url {
 /// FriendlyVersion represents a version string that can optionally be prefixed with 'v'.
 /// It can also be set to 'latest' to represent the latest version. It stores the original string
 /// and makes it accessible through standard traits.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct FriendlyVersion {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForFriendlyVersion for FriendlyVersion {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        let decider = rng.gen::<f64>();
+        let mut rando_semver = || {
+            format!(
+                "{}.{}.{}",
+                rng.gen_range(0u8..5),
+                rng.gen_range(0u8..20),
+                rng.gen_range(0u8..200),
+            )
+        };
+
+        if decider < 0.2 {
+            "latest".to_string()
+        } else if decider < 0.4 {
+            format!("v{}", rando_semver())
+        } else {
+            rando_semver()
+        }
+    }
 }
 
 impl TryFrom<&str> for FriendlyVersion {
@@ -618,9 +697,20 @@ mod test_version {
 /// original string and makes it accessible through standard traits. Its purpose
 /// is input validation, for example validating the kubelet's "clusterDomain"
 /// config value.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct DNSDomain {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForDNSDomain for DNSDomain {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        if rng.gen::<f64>() < 0.33 {
+            crate::rando_domain(rng)
+        } else {
+            crate::rando_ipaddr(rng).to_string()
+        }
+    }
 }
 
 impl TryFrom<&str> for DNSDomain {
@@ -687,9 +777,16 @@ mod test_dns_domain {
 /// SysctlKey represents a string that is a valid Linux sysctl key; keys must be representable as
 /// filesystem paths, and are generally kept to lowercase_underscored_names separated with '.' or
 /// '/'.  SysctlKey stores the original string and makes it accessible through standard traits.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct SysctlKey {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForSysctlKey for SysctlKey {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        crate::rando_alphanumeric_constrained(rng, 1, 128)
+    }
 }
 
 lazy_static! {
@@ -798,9 +895,19 @@ mod test_sysctl_key {
 /// BootConfigKey represents a string that is a valid Kernel boot config key; each key word must
 /// contain only alphabets, numbers, dash (-) or underscore (_).
 /// BootConfigKey stores the original string and makes it accessible through standard traits.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct BootConfigKey {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForBootConfigKey for BootConfigKey {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        (0..rng.gen_range(1..3))
+            .map(|_| crate::rando_alphanumeric_constrained(rng, 2, 20))
+            .collect::<Vec<_>>()
+            .join(".")
+    }
 }
 
 impl TryFrom<&str> for BootConfigKey {
@@ -863,9 +970,16 @@ mod test_bootconfig_key {
 /// single-quotes or double-quotes. Here we treat the value as if they're always quoted in the context
 /// of Bottlerocket settings. This means the value just has to be printable ASCII.
 /// BootConfigValue stores the original string and makes it accessible through standard traits.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct BootConfigValue {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForBootConfigValue for BootConfigValue {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        crate::rando_alphanumeric(rng)
+    }
 }
 
 impl TryFrom<&str> for BootConfigValue {
@@ -920,9 +1034,21 @@ mod test_bootconfig_value {
 
 /// Lockdown represents a string that is a valid Linux kernel lockdown mode name.  It stores the
 /// original string and makes it accessible through standard traits.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct Lockdown {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForLockdown for Lockdown {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        match rng.gen::<f64>() {
+            f if f < 0.33 => "none",
+            f if f < 0.66 => "integrity",
+            _ => "confidentiality",
+        }
+        .to_string()
+    }
 }
 
 impl TryFrom<&str> for Lockdown {
@@ -943,9 +1069,21 @@ string_impls_for!(Lockdown, "Lockdown");
 
 // =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct BootstrapContainerMode {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForBootstrapContainerMode for BootstrapContainerMode {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        match rng.gen::<f64>() {
+            f if f < 0.33 => "off",
+            f if f < 0.66 => "once",
+            _ => "always",
+        }
+        .to_string()
+    }
 }
 
 impl TryFrom<&str> for BootstrapContainerMode {
@@ -991,9 +1129,29 @@ mod test_valid_container_mode {
 }
 
 // =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=   =^..^=
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct PemCertificateString {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForPemCertificateString for PemCertificateString {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        if rng.gen::<f64>() < 0.05 {
+            String::new()
+        } else {
+            let subject_alt_names: Vec<_> = (0..rng.gen_range(1..5))
+                .map(|_| crate::rando_domain(rng))
+                .collect();
+
+            base64::encode(
+                rcgen::generate_simple_self_signed(subject_alt_names)
+                    .unwrap()
+                    .serialize_pem()
+                    .unwrap(),
+            )
+        }
+    }
 }
 
 impl TryFrom<&str> for PemCertificateString {
@@ -1077,9 +1235,21 @@ mod test_valid_pem_certificate_string {
 /// alphanumeric characters, plus hyphens, plus underscores. It stores the original
 /// form and makes it accessible through standard traits. Its purpose is to validate
 /// input that will be treated as a potential kernel module name.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, RandGen)]
 pub struct KmodKey {
+    #[rand_derive(custom)]
     inner: String,
+}
+
+impl TestDataProviderForKmodKey for KmodKey {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+        format!(
+            "{}-{}_{}",
+            crate::rando_alphanumeric_constrained(rng, 2, 10),
+            crate::rando_alphanumeric_constrained(rng, 2, 10),
+            crate::rando_alphanumeric_constrained(rng, 2, 10),
+        )
+    }
 }
 
 // This limit is based on the kernel definition, and assumes a 64-bit host.
@@ -1138,9 +1308,16 @@ mod test_valid_kmod_key {
 
 /// Input value that needs to be a positive value, but should not be greater
 /// than an i32::MAX.
-#[derive(Debug, PartialEq, Scalar)]
+#[derive(Debug, PartialEq, Scalar, RandGen)]
 pub struct NonNegativeInteger {
+    #[rand_derive(custom)]
     inner: i32,
+}
+
+impl TestDataProviderForNonNegativeInteger for NonNegativeInteger {
+    fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> i32 {
+        rng.gen_range(0..i32::MAX)
+    }
 }
 
 impl Validate for NonNegativeInteger {

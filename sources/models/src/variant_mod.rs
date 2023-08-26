@@ -13,7 +13,7 @@ pub use current::*;
 // This is the top-level model exposed by the API system. It contains the common sections for all
 // variants.  This allows a single API call to retrieve everything the API system knows, which is
 // useful as a check and also, for example, as a data source for templated configuration files.
-#[model]
+#[model(no_dist = true)]
 struct Model {
     settings: Settings,
     services: Services,

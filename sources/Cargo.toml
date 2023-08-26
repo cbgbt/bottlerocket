@@ -84,6 +84,7 @@ members = [
     "logdog",
 
     "models",
+    "models/model-randgen",
 
     "parse-datetime",
 

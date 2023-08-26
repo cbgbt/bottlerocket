@@ -17,6 +17,7 @@ proc-macro = true
 darling = "0.14"
 quote = "1"
 syn = { version = "1", default-features = false, features = ["full", "parsing", "printing", "proc-macro", "visit-mut"] }
+rand_derive2 = "0.1"
 
 [build-dependencies]
 generate-readme = { version = "0.1", path = "../../generate-readme" }
