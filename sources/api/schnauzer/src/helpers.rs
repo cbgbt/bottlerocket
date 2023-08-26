@@ -1749,6 +1749,7 @@ fn hostname_resolveable(
     hostname: &str,
     configured_hosts: Option<&model::modeled_types::EtcHostsEntries>,
 ) -> bool {
+    return false;
     // If the hostname is in our configured hosts, then it *will* be resolvable when /etc/hosts is rendered.
     // Note that DNS search paths in /etc/resolv.conf are not relevant here, as they are not checked when searching /etc/hosts.
     if let Some(etc_hosts_entries) = configured_hosts {

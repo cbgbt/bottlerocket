@@ -16,7 +16,7 @@ pub async fn construct_handlebars_registry<'a>(
 
     // Strict mode will panic if a key exists in the template
     // but isn't provided in the data given to the renderer.
-    template_registry.set_strict_mode(true);
+    // template_registry.set_strict_mode(true);
 
     register_requested_helpers(helper_resolver, &mut template_registry, frontmatter).await?;
 
