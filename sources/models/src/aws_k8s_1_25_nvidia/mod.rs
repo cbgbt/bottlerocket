@@ -58,9 +58,7 @@ impl TestDataProviderForSettings for Settings {
         crate::maybe_return(rng, r)
     }
 
-    fn generate_pki<R: rand::Rng + ?Sized>(
-        rng: &mut R,
-    ) -> HashMap<Identifier, PemCertificate> {
+    fn generate_pki<R: rand::Rng + ?Sized>(rng: &mut R) -> HashMap<Identifier, PemCertificate> {
         let r = crate::RandoHashmap::<Identifier, PemCertificate>::generate(rng, 5, 10);
         crate::maybe_return(rng, r)
     }

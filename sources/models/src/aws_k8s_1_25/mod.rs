@@ -1,13 +1,14 @@
+use crate::modeled_types::Identifier;
+use crate::{
+    AutoScalingSettings, AwsSettings, BootSettings, BootstrapContainer, CloudFormationSettings,
+    ContainerRuntimeSettings, DnsSettings, HostContainer, KernelSettings, KubernetesSettings,
+    MetricsSettings, NetworkSettings, NtpSettings, OciDefaults, OciHooks, PemCertificate,
+    RegistrySettings, UpdatesSettings,
+};
+
 use model_derive::model;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-use crate::{modeled_types::Identifier, rando_alphanumeric_constrained};
-use crate::{
-    AwsSettings, BootSettings, BootstrapContainer, CloudFormationSettings, DnsSettings,
-    HostContainer, KernelSettings, MetricsSettings, NetworkSettings, NtpSettings, OciHooks,
-    PemCertificate, RegistrySettings, UpdatesSettings,
-};
 
 // Note: we have to use 'rename' here because the top-level Settings structure is the only one
 // that uses its name in serialization; internal structures use the field name that points to it
@@ -15,6 +16,7 @@ use crate::{
 struct Settings {
     #[rand_derive(custom)]
     motd: String,
+    kubernetes: KubernetesSettings,
     updates: UpdatesSettings,
     #[rand_derive(custom)]
     host_containers: HashMap<Identifier, HostContainer>,
@@ -29,9 +31,12 @@ struct Settings {
     #[rand_derive(custom)]
     pki: HashMap<Identifier, PemCertificate>,
     container_registry: RegistrySettings,
+    oci_defaults: OciDefaults,
     oci_hooks: OciHooks,
     cloudformation: CloudFormationSettings,
     dns: DnsSettings,
+    container_runtime: ContainerRuntimeSettings,
+    autoscaling: AutoScalingSettings,
 }
 
 impl TestDataProviderForSettings for Settings {
@@ -54,9 +59,7 @@ impl TestDataProviderForSettings for Settings {
         crate::maybe_return(rng, r)
     }
 
-    fn generate_pki<R: rand::Rng + ?Sized>(
-        rng: &mut R,
-    ) -> HashMap<Identifier, PemCertificate> {
+    fn generate_pki<R: rand::Rng + ?Sized>(rng: &mut R) -> HashMap<Identifier, PemCertificate> {
         let r = crate::RandoHashmap::<Identifier, PemCertificate>::generate(rng, 5, 10);
         crate::maybe_return(rng, r)
     }
