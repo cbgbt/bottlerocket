@@ -159,7 +159,7 @@ pub struct ValidLinuxHostname {
 
 impl TestDataProviderForValidLinuxHostname for ValidLinuxHostname {
     fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
-        crate::rando_alphanumeric(rng)
+        crate::rando_alphanumeric_constrained(rng, 5, 30).to_lowercase()
     }
 }
 
