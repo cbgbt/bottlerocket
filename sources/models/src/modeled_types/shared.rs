@@ -705,11 +705,7 @@ pub struct DNSDomain {
 
 impl TestDataProviderForDNSDomain for DNSDomain {
     fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
-        if rng.gen::<f64>() < 0.33 {
-            crate::rando_domain(rng)
-        } else {
-            crate::rando_ipaddr(rng).to_string()
-        }
+        crate::rando_domain(rng)
     }
 }
 
