@@ -289,7 +289,7 @@ struct RandoVec<T> {
 }
 
 pub fn rando_alphanumeric<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
-    (0u8..rng.gen())
+    (5u8..rng.gen())
         .map(|_| rng.sample(&rand::distributions::Alphanumeric))
         .map(char::from)
         .collect()
