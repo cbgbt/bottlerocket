@@ -38,28 +38,28 @@ struct Settings {
 }
 
 impl TestDataProviderForSettings for Settings {
-    fn generate_motd<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<String> {
+    fn generate_motd<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
         let r = crate::rando_alphanumeric_constrained(rng, 5, 60);
         crate::maybe_return(rng, r)
     }
 
     fn generate_host_containers<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<Identifier, HostContainer>> {
+    ) -> HashMap<Identifier, HostContainer> {
         let r = crate::RandoHashmap::<Identifier, HostContainer>::generate(rng, 5, 10);
         crate::maybe_return(rng, r)
     }
 
     fn generate_bootstrap_containers<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<Identifier, BootstrapContainer>> {
+    ) -> HashMap<Identifier, BootstrapContainer> {
         let r = crate::RandoHashmap::<Identifier, BootstrapContainer>::generate(rng, 5, 10);
         crate::maybe_return(rng, r)
     }
 
     fn generate_pki<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<Identifier, PemCertificate>> {
+    ) -> HashMap<Identifier, PemCertificate> {
         let r = crate::RandoHashmap::<Identifier, PemCertificate>::generate(rng, 5, 10);
         crate::maybe_return(rng, r)
     }

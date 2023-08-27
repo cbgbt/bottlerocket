@@ -93,7 +93,7 @@ impl From<ParsedArgs> for ModelHelper {
             rename: args.rename,
             impl_default: args.impl_default.unwrap_or(false),
             no_dist: args.no_dist.unwrap_or(false),
-            add_option: args.add_option.unwrap_or(true),
+            add_option: args.add_option.unwrap_or(false),
         }
     }
 }
@@ -125,7 +125,7 @@ impl VisitMut for ModelHelper {
         // Add our derives, if the user hasn't set any
         if !is_attr_set("derive", &node.attrs) {
             // Derive Default, if the user requested
-            let attr = match (self.impl_default, self.no_dist) {
+            let attr = match (false, self.no_dist) {
                 (true, false) => parse_quote!(
                     #[derive(Debug, Default, PartialEq, Serialize, Deserialize, rand_derive2::RandGen)]
                 ),

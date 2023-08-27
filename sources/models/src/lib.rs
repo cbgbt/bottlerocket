@@ -375,13 +375,9 @@ struct KubernetesSettings {
     api_server: Url,
     #[rand_derive(custom)]
     node_labels: HashMap<KubernetesLabelKey, KubernetesLabelValue>,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "deserialize_node_taints"
-    )]
+    #[serde(default, deserialize_with = "deserialize_node_taints")]
     #[rand_derive(custom)]
-    node_taints: HashMap<KubernetesLabelKey, Vec<KubernetesTaintValue>>,
+    node_taints: Option<HashMap<KubernetesLabelKey, Vec<KubernetesTaintValue>>>,
     #[rand_derive(custom)]
     static_pods: HashMap<Identifier, StaticPod>,
     authentication_mode: KubernetesAuthenticationMode,
@@ -463,14 +459,14 @@ randogen_vec!(SingleLineString);
 randogen_vec!(KubernetesCPUManagerPolicyOption);
 randogen_vec!(ValidLinuxHostname);
 
-fn maybe_return<R: rand::Rng + ?Sized, T>(rng: &mut R, value: T) -> Option<T> {
-    rng.gen::<bool>().then(|| value)
+fn maybe_return<R: rand::Rng + ?Sized, T>(rng: &mut R, value: T) -> T {
+    value
 }
 
 impl TestDataProviderForKubernetesSettings for KubernetesSettings {
     fn generate_node_labels<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<KubernetesLabelKey, KubernetesLabelValue>> {
+    ) -> HashMap<KubernetesLabelKey, KubernetesLabelValue> {
         let r = RandoHashmap::<KubernetesLabelKey, KubernetesLabelValue>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
@@ -479,19 +475,17 @@ impl TestDataProviderForKubernetesSettings for KubernetesSettings {
         rng: &mut R,
     ) -> Option<HashMap<KubernetesLabelKey, Vec<KubernetesTaintValue>>> {
         let r = RandoHashmap::<KubernetesLabelKey, Vec<KubernetesTaintValue>>::generate(rng, 2, 5);
-        maybe_return(rng, r)
+        Some(maybe_return(rng, r))
     }
 
-    fn generate_static_pods<R: rand::Rng + ?Sized>(
-        rng: &mut R,
-    ) -> Option<HashMap<Identifier, StaticPod>> {
+    fn generate_static_pods<R: rand::Rng + ?Sized>(rng: &mut R) -> HashMap<Identifier, StaticPod> {
         let r = RandoHashmap::<Identifier, StaticPod>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
     fn generate_eviction_hard<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<KubernetesEvictionKey, KubernetesThresholdValue>> {
+    ) -> HashMap<KubernetesEvictionKey, KubernetesThresholdValue> {
         let r =
             RandoHashmap::<KubernetesEvictionKey, KubernetesThresholdValue>::generate(rng, 2, 5);
         maybe_return(rng, r)
@@ -499,7 +493,7 @@ impl TestDataProviderForKubernetesSettings for KubernetesSettings {
 
     fn generate_eviction_soft<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<KubernetesEvictionKey, KubernetesThresholdValue>> {
+    ) -> HashMap<KubernetesEvictionKey, KubernetesThresholdValue> {
         let r =
             RandoHashmap::<KubernetesEvictionKey, KubernetesThresholdValue>::generate(rng, 2, 5);
         maybe_return(rng, r)
@@ -507,14 +501,14 @@ impl TestDataProviderForKubernetesSettings for KubernetesSettings {
 
     fn generate_eviction_soft_grace_period<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<KubernetesEvictionKey, KubernetesDurationValue>> {
+    ) -> HashMap<KubernetesEvictionKey, KubernetesDurationValue> {
         let r = RandoHashmap::<KubernetesEvictionKey, KubernetesDurationValue>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
     fn generate_kube_reserved<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<KubernetesReservedResourceKey, KubernetesQuantityValue>> {
+    ) -> HashMap<KubernetesReservedResourceKey, KubernetesQuantityValue> {
         let r = RandoHashmap::<KubernetesReservedResourceKey, KubernetesQuantityValue>::generate(
             rng, 2, 5,
         );
@@ -523,7 +517,7 @@ impl TestDataProviderForKubernetesSettings for KubernetesSettings {
 
     fn generate_system_reserved<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<KubernetesReservedResourceKey, KubernetesQuantityValue>> {
+    ) -> HashMap<KubernetesReservedResourceKey, KubernetesQuantityValue> {
         let r = RandoHashmap::<KubernetesReservedResourceKey, KubernetesQuantityValue>::generate(
             rng, 2, 5,
         );
@@ -532,33 +526,33 @@ impl TestDataProviderForKubernetesSettings for KubernetesSettings {
 
     fn generate_allowed_unsafe_sysctls<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<Vec<SingleLineString>> {
+    ) -> Vec<SingleLineString> {
         let r = RandoVec::<SingleLineString>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
     fn generate_cpu_manager_policy_options<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<Vec<KubernetesCPUManagerPolicyOption>> {
+    ) -> Vec<KubernetesCPUManagerPolicyOption> {
         let r = RandoVec::<KubernetesCPUManagerPolicyOption>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
     fn generate_credential_providers<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<Identifier, CredentialProvider>> {
+    ) -> HashMap<Identifier, CredentialProvider> {
         let r = RandoHashmap::<Identifier, CredentialProvider>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
     fn generate_memory_manager_reserved_memory<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<Identifier, KubernetesMemoryReservation>> {
+    ) -> HashMap<Identifier, KubernetesMemoryReservation> {
         let r = RandoHashmap::<Identifier, KubernetesMemoryReservation>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
-    fn generate_node_ip<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<IpAddr> {
+    fn generate_node_ip<R: rand::Rng + ?Sized>(rng: &mut R) -> IpAddr {
         let r = rando_ipaddr(rng);
         maybe_return(rng, r)
     }
@@ -592,14 +586,12 @@ randogen_hashmap!(ECSAttributeKey, ECSAttributeValue);
 impl TestDataProviderForECSSettings for ECSSettings {
     fn generate_instance_attributes<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<ECSAttributeKey, ECSAttributeValue>> {
+    ) -> HashMap<ECSAttributeKey, ECSAttributeValue> {
         let r = RandoHashmap::<ECSAttributeKey, ECSAttributeValue>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
-    fn generate_logging_drivers<R: rand::Rng + ?Sized>(
-        rng: &mut R,
-    ) -> Option<Vec<SingleLineString>> {
+    fn generate_logging_drivers<R: rand::Rng + ?Sized>(rng: &mut R) -> Vec<SingleLineString> {
         let r = RandoVec::<SingleLineString>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
@@ -613,7 +605,7 @@ struct RegistryMirror {
 }
 
 impl TestDataProviderForRegistryMirror for RegistryMirror {
-    fn generate_endpoint<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<Vec<Url>> {
+    fn generate_endpoint<R: rand::Rng + ?Sized>(rng: &mut R) -> Vec<Url> {
         let r = RandoVec::<Url>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
@@ -632,14 +624,10 @@ struct RegistryCredential {
 // Image registry settings for the container runtimes.
 #[model]
 struct RegistrySettings {
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "deserialize_mirrors"
-    )]
+    #[serde(default, deserialize_with = "deserialize_mirrors")]
     #[rand_derive(custom)]
-    mirrors: Vec<RegistryMirror>,
-    #[serde(alias = "creds", default, skip_serializing_if = "Option::is_none")]
+    mirrors: Option<Vec<RegistryMirror>>,
+    #[serde(alias = "creds", default)]
     #[rand_derive(custom)]
     credentials: Vec<RegistryCredential>,
 }
@@ -656,14 +644,14 @@ impl RandoVec<IpAddr> {
 }
 
 impl TestDataProviderForRegistrySettings for RegistrySettings {
-    fn generate_credentials<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<Vec<RegistryCredential>> {
+    fn generate_credentials<R: rand::Rng + ?Sized>(rng: &mut R) -> Vec<RegistryCredential> {
         let r = RandoVec::<RegistryCredential>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
     fn generate_mirrors<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<Vec<RegistryMirror>> {
         let r = RandoVec::<RegistryMirror>::generate(rng, 2, 5);
-        maybe_return(rng, r)
+        Some(maybe_return(rng, r))
     }
 }
 
@@ -699,7 +687,7 @@ struct NetworkSettings {
 }
 
 impl TestDataProviderForNetworkSettings for NetworkSettings {
-    fn generate_no_proxy<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<Vec<SingleLineString>> {
+    fn generate_no_proxy<R: rand::Rng + ?Sized>(rng: &mut R) -> Vec<SingleLineString> {
         let r = RandoVec::<SingleLineString>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
@@ -713,7 +701,7 @@ struct NtpSettings {
 }
 
 impl TestDataProviderForNtpSettings for NtpSettings {
-    fn generate_time_servers<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<Vec<Url>> {
+    fn generate_time_servers<R: rand::Rng + ?Sized>(rng: &mut R) -> Vec<Url> {
         let r = RandoVec::<Url>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
@@ -729,12 +717,12 @@ struct DnsSettings {
 }
 
 impl TestDataProviderForDnsSettings for DnsSettings {
-    fn generate_name_servers<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<Vec<IpAddr>> {
+    fn generate_name_servers<R: rand::Rng + ?Sized>(rng: &mut R) -> Vec<IpAddr> {
         let r = RandoVec::<IpAddr>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
-    fn generate_search_list<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<Vec<ValidLinuxHostname>> {
+    fn generate_search_list<R: rand::Rng + ?Sized>(rng: &mut R) -> Vec<ValidLinuxHostname> {
         let r = RandoVec::<ValidLinuxHostname>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
@@ -790,14 +778,12 @@ impl RandoHashmap<SysctlKey, Vec<String>> {
 }
 
 impl TestDataProviderForKernelSettings for KernelSettings {
-    fn generate_sysctl<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<HashMap<SysctlKey, String>> {
+    fn generate_sysctl<R: rand::Rng + ?Sized>(rng: &mut R) -> HashMap<SysctlKey, String> {
         let r = RandoHashmap::<SysctlKey, String>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
-    fn generate_modules<R: rand::Rng + ?Sized>(
-        rng: &mut R,
-    ) -> Option<HashMap<KmodKey, KmodSetting>> {
+    fn generate_modules<R: rand::Rng + ?Sized>(rng: &mut R) -> HashMap<KmodKey, KmodSetting> {
         let r = RandoHashmap::<KmodKey, KmodSetting>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
@@ -820,7 +806,7 @@ struct BootSettings {
         skip_serializing_if = "Option::is_none"
     )]
     #[rand_derive(custom)]
-    kernel_parameters: HashMap<BootConfigKey, Vec<BootConfigValue>>,
+    kernel_parameters: Option<HashMap<BootConfigKey, Vec<BootConfigValue>>>,
     #[serde(
         alias = "init",
         rename(serialize = "init"),
@@ -828,7 +814,7 @@ struct BootSettings {
         skip_serializing_if = "Option::is_none"
     )]
     #[rand_derive(custom)]
-    init_parameters: HashMap<BootConfigKey, Vec<BootConfigValue>>,
+    init_parameters: Option<HashMap<BootConfigKey, Vec<BootConfigValue>>>,
 }
 
 randogen_vec!(KubernetesTaintValue);
@@ -873,14 +859,14 @@ impl TestDataProviderForBootSettings for BootSettings {
         rng: &mut R,
     ) -> Option<HashMap<BootConfigKey, Vec<BootConfigValue>>> {
         let r = RandoHashmap::<BootConfigKey, Vec<BootConfigValue>>::generate(rng, 2, 5);
-        maybe_return(rng, r)
+        Some(maybe_return(rng, r))
     }
 
     fn generate_init_parameters<R: rand::Rng + ?Sized>(
         rng: &mut R,
     ) -> Option<HashMap<BootConfigKey, Vec<BootConfigValue>>> {
         let r = RandoHashmap::<BootConfigKey, Vec<BootConfigValue>>::generate(rng, 2, 5);
-        maybe_return(rng, r)
+        Some(maybe_return(rng, r))
     }
 }
 
@@ -903,7 +889,7 @@ struct MetricsSettings {
 }
 
 impl TestDataProviderForMetricsSettings for MetricsSettings {
-    fn generate_service_checks<R: rand::Rng + ?Sized>(rng: &mut R) -> Option<Vec<String>> {
+    fn generate_service_checks<R: rand::Rng + ?Sized>(rng: &mut R) -> Vec<String> {
         let r = (0..rng.gen_range(2..5))
             .map(|_| crate::rando_alphanumeric_constrained(rng, 5, 30))
             .collect();
@@ -1045,14 +1031,14 @@ struct OciDefaults {
 impl TestDataProviderForOciDefaults for OciDefaults {
     fn generate_capabilities<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<OciDefaultsCapability, bool>> {
+    ) -> HashMap<OciDefaultsCapability, bool> {
         let r = RandoHashmap::<OciDefaultsCapability, bool>::generate(rng, 2, 5);
         maybe_return(rng, r)
     }
 
     fn generate_resource_limits<R: rand::Rng + ?Sized>(
         rng: &mut R,
-    ) -> Option<HashMap<OciDefaultsResourceLimitType, OciDefaultsResourceLimit>> {
+    ) -> HashMap<OciDefaultsResourceLimitType, OciDefaultsResourceLimit> {
         let r = RandoHashmap::<OciDefaultsResourceLimitType, OciDefaultsResourceLimit>::generate(
             rng, 2, 5,
         );

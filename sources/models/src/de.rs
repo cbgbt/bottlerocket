@@ -167,8 +167,8 @@ where
             let mut vec = Vec::new();
             while let Some((k, v)) = map.next_entry()? {
                 vec.push(RegistryMirror {
-                    registry: Some(k),
-                    endpoint: Some(v),
+                    registry: k,
+                    endpoint: v,
                 });
             }
             Ok(Some(vec))
