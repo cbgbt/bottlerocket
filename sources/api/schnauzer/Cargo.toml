@@ -30,6 +30,7 @@ lazy_static = "1"
 log = "0.4"
 maplit = "1.0"
 models = { path = "../../models", version = "0.1" }
+mut_static = "1"
 num_cpus = "1"
 percent-encoding = "2"
 pest = "2.5"

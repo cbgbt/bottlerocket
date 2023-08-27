@@ -4,11 +4,10 @@ use lazy_static::__Deref;
 use rayon::prelude::*;
 use schnauzer::import::TemplateImporter;
 use std::{
-    collections::HashSet,
+    cell::RefCell,
     fs::create_dir_all,
     path::{Path, PathBuf},
     str::FromStr,
-    sync::{Arc, Mutex},
 };
 use std::{fs::File, process::Command};
 
@@ -160,6 +159,13 @@ fn all_models<P: AsRef<Path>>(
         .flatten())
 }
 
+thread_local! {
+    pub static RUNTIME: RefCell<tokio::runtime::Runtime> = RefCell::new(tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap());
+}
+
 fn main() -> Result<()> {
     let args: Args = argh::from_env();
 
@@ -199,40 +205,43 @@ fn main() -> Result<()> {
             maybe_model.ok()
         })
         .for_each(|(variant, model_name, model)| {
-            for (filepath, v1_template, v2_template) in &templates {
-                let v1 = render_v1(&v1_template, &model);
-                let v2 = render_v2(&v2_template, &model);
+            RUNTIME.with(|rt| {
+                let rt = rt.borrow();
+                for (filepath, v1_template, v2_template) in &templates {
+                    let v1 = render_v1(&v1_template, &model);
+                    let v2 = rt.block_on(render_v2(&v2_template, &model));
 
-                if let Err(e) = v2 {
-                    eprintln!(
-                        "Error rendering template {} on variant {}",
-                        filepath, variant
-                    );
+                    if let Err(e) = v2 {
+                        eprintln!(
+                            "Error rendering template {} on variant {}",
+                            filepath, variant
+                        );
+                    }
+
+                    // match (&v1, &v2) {
+                    //     (Err(_), Err(_)) => {
+                    //         // Both failed, good.
+                    //         continue;
+                    //     }
+                    //     (Ok(r1), Ok(r2)) if r1 == r2 => {
+                    //         // Perfect case, they match
+                    //         continue;
+                    //     }
+                    //     (Ok(r1), Ok(r2)) if r1 != r2 => {
+                    //         eprintln!("Template {} was not the same!!!!", filepath);
+                    //         eprintln!("Rendered for variant/model {}/{}", variant, model_name);
+                    //         eprintln!("v1:\n{}\n", r1);
+                    //         eprintln!("v2:\n{}\n", r2);
+                    //     }
+                    //     _ => {
+                    //         eprintln!("Template {} was not the same!!!!", filepath);
+                    //         eprintln!("Rendered for variant/model {}/{}", variant, model_name);
+                    //         eprintln!("v1:\n{:?}\n", v1);
+                    //         eprintln!("v2:\n{:?}\n", v2);
+                    //     }
+                    // }
                 }
-
-                // match (&v1, &v2) {
-                //     (Err(_), Err(_)) => {
-                //         // Both failed, good.
-                //         continue;
-                //     }
-                //     (Ok(r1), Ok(r2)) if r1 == r2 => {
-                //         // Perfect case, they match
-                //         continue;
-                //     }
-                //     (Ok(r1), Ok(r2)) if r1 != r2 => {
-                //         eprintln!("Template {} was not the same!!!!", filepath);
-                //         eprintln!("Rendered for variant/model {}/{}", variant, model_name);
-                //         eprintln!("v1:\n{}\n", r1);
-                //         eprintln!("v2:\n{}\n", r2);
-                //     }
-                //     _ => {
-                //         eprintln!("Template {} was not the same!!!!", filepath);
-                //         eprintln!("Rendered for variant/model {}/{}", variant, model_name);
-                //         eprintln!("v1:\n{:?}\n", v1);
-                //         eprintln!("v2:\n{:?}\n", v2);
-                //     }
-                // }
-            }
+            })
         });
 
     Ok(())
@@ -260,7 +269,6 @@ impl TemplateImporter for HalfFakeImporter {
     }
 }
 
-#[tokio::main]
 async fn render_v2(template: &str, model: &serde_json::Value) -> Result<String> {
     let importer = HalfFakeImporter {
         settings: schnauzer::FakeSettingsResolver::new(serde_json::json!({"settings": model})),

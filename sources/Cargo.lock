@@ -1671,6 +1671,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "error-chain"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "318cb3c71ee4cdea69fdc9e15c173b245ed6063e1709029e8fd32525a881120f"
+dependencies = [
+ "backtrace",
+]
+
+[[package]]
 name = "fastrand"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2592,6 +2601,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mut_static"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "35c6a6c3cb2e32e1debf5bbab3378a769c21782dc89754e96592ff3627a42367"
+dependencies = [
+ "error-chain",
+]
+
+[[package]]
 name = "netdog"
 version = "0.1.0"
 dependencies = [
@@ -3459,6 +3477,7 @@ dependencies = [
  "log",
  "maplit",
  "models",
+ "mut_static",
  "num_cpus",
  "percent-encoding",
  "pest",
