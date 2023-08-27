@@ -495,11 +495,7 @@ pub struct Url {
 impl TestDataProviderForUrl for Url {
     fn generate_inner<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
         let domain = crate::rando_domain(rng);
-        if rng.gen::<bool>() {
-            format!("http://{}", domain)
-        } else {
-            domain
-        }
+        format!("http://{}", domain)
     }
 }
 

@@ -261,6 +261,7 @@ pub mod exec;
 use model_derive::model;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, net::Ipv4Addr, sync::Mutex};
+use rand::distributions::{Uniform, Distribution};
 use std::{
     marker::PhantomData,
     net::{IpAddr, Ipv6Addr},
@@ -307,10 +308,14 @@ pub fn rando_alphanumeric_constrained<R: rand::Rng + ?Sized>(
 }
 
 pub fn rando_domain<R: rand::Rng + ?Sized>(rng: &mut R) -> String {
+    let alpha = Uniform::new(char::from(97), char::from(122));
+    let domain: String = (0..rng.gen_range(2..3))
+        .map(|_| alpha.sample(rng))
+        .collect();
     format!(
         "{}.{}",
         crate::rando_alphanumeric_constrained(rng, 2, 10),
-        crate::rando_alphanumeric_constrained(rng, 2, 3)
+        domain
     )
     .to_ascii_lowercase()
 }
@@ -1070,11 +1075,11 @@ struct OciDefaultsResourceLimit {
 }
 
 impl TestDataProviderForOciDefaultsResourceLimit for OciDefaultsResourceLimit {
-    fn generate_hard_limit<R:rand::Rng+ ?Sized>(rng: &mut R) -> i64 {
+    fn generate_hard_limit<R: rand::Rng + ?Sized>(rng: &mut R) -> i64 {
         rng.gen_range(5000..9999)
     }
 
-    fn generate_soft_limit<R:rand::Rng+ ?Sized>(rng: &mut R) -> i64 {
+    fn generate_soft_limit<R: rand::Rng + ?Sized>(rng: &mut R) -> i64 {
         rng.gen_range(0..5000)
     }
 }
