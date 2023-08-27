@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 /// OciDefaultsCapability specifies which process capabilities are
 /// allowed to be set in the default OCI spec.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Scalar, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Scalar, Serialize, Deserialize, PartialOrd, Ord)]
 #[serde(rename_all = "kebab-case")]
 pub enum OciDefaultsCapability {
     AuditControl,
@@ -91,7 +91,7 @@ mod oci_defaults_capabilities {
 /// OciDefaultsResourceLimitType specifies which resource limits are
 /// allowed to be set in the default OCI spec.
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Scalar, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Scalar, Serialize, Deserialize, PartialOrd, Ord)]
 #[serde(rename_all = "kebab-case")]
 pub enum OciDefaultsResourceLimitType {
     MaxAddressSpace,

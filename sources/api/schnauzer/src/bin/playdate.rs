@@ -196,6 +196,9 @@ fn main() -> Result<()> {
         })
         .collect::<Result<Vec<_>>>()?;
 
+    let v1_registry =
+        schnauzer::v1::build_template_registry().context("failed to build v1 template registry")?;
+
     all_models(&args.models)?
         .par_bridge()
         .filter_map(|maybe_model| {
@@ -208,38 +211,35 @@ fn main() -> Result<()> {
             RUNTIME.with(|rt| {
                 let rt = rt.borrow();
                 for (filepath, v1_template, v2_template) in &templates {
-                    let v1 = render_v1(&v1_template, &model);
+                    let model = serde_json::json!({"settings": model});
+                    let v1 = render_v1(&v1_registry, &v1_template, &model);
                     let v2 = rt.block_on(render_v2(&v2_template, &model));
 
-                    if let Err(e) = v2 {
-                        eprintln!(
-                            "Error rendering template {} on variant {}",
-                            filepath, variant
-                        );
+                    match (&v1, &v2) {
+                        (Err(_), Err(_)) => {
+                            // Both failed, which is fine.
+                            eprintln!("Both v1 and v2 failed on {}/{}", variant, filepath);
+                        }
+                        (Ok(r1), Ok(r2)) if r1 == r2 => {
+                            // Perfect case, they match
+                            continue;
+                        }
+                        (Ok(r1), Ok(r2)) if r1 != r2 => {
+                            eprintln!("Template {} was not the same!!!!", filepath);
+                            eprintln!(
+                                "Rendered for variant/model {}/{} with {}",
+                                variant, filepath, model_name
+                            );
+                            let changeset = difference::Changeset::new(&r1, &r2, " ");
+                            eprintln!("{}", changeset);
+                        }
+                        _ => {
+                            eprintln!("Template {} was not the same!!!!", filepath);
+                            eprintln!("Rendered for variant/model {}/{}", variant, filepath);
+                            eprintln!("v1:\n{:?}\n", v1);
+                            eprintln!("v2:\n{:?}\n", v2);
+                        }
                     }
-
-                    // match (&v1, &v2) {
-                    //     (Err(_), Err(_)) => {
-                    //         // Both failed, good.
-                    //         continue;
-                    //     }
-                    //     (Ok(r1), Ok(r2)) if r1 == r2 => {
-                    //         // Perfect case, they match
-                    //         continue;
-                    //     }
-                    //     (Ok(r1), Ok(r2)) if r1 != r2 => {
-                    //         eprintln!("Template {} was not the same!!!!", filepath);
-                    //         eprintln!("Rendered for variant/model {}/{}", variant, model_name);
-                    //         eprintln!("v1:\n{}\n", r1);
-                    //         eprintln!("v2:\n{}\n", r2);
-                    //     }
-                    //     _ => {
-                    //         eprintln!("Template {} was not the same!!!!", filepath);
-                    //         eprintln!("Rendered for variant/model {}/{}", variant, model_name);
-                    //         eprintln!("v1:\n{:?}\n", v1);
-                    //         eprintln!("v2:\n{:?}\n", v2);
-                    //     }
-                    // }
                 }
             })
         });
@@ -247,8 +247,14 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn render_v1(template: &str, model: &serde_json::Value) -> Result<String> {
-    Ok("asplod".to_string())
+fn render_v1(
+    v1_registry: &handlebars::Handlebars,
+    template: &str,
+    model: &serde_json::Value,
+) -> Result<String> {
+    v1_registry
+        .render_template(template, &model)
+        .context("Failed to v1 render template")
 }
 
 struct HalfFakeImporter {
@@ -271,7 +277,7 @@ impl TemplateImporter for HalfFakeImporter {
 
 async fn render_v2(template: &str, model: &serde_json::Value) -> Result<String> {
     let importer = HalfFakeImporter {
-        settings: schnauzer::FakeSettingsResolver::new(serde_json::json!({"settings": model})),
+        settings: schnauzer::FakeSettingsResolver::new(model.clone()),
         helpers: Default::default(),
     };
 

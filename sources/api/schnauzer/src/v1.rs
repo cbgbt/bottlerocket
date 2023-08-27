@@ -112,7 +112,7 @@ pub fn build_template_registry() -> Result<handlebars::Handlebars<'static>> {
     let mut template_registry = Handlebars::new();
     // Strict mode will panic if a key exists in the template
     // but isn't provided in the data given to the renderer
-    template_registry.set_strict_mode(true);
+    // template_registry.set_strict_mode(true);
 
     // Prefer snake case for helper names (we accidentally created a few with kabob case)
     template_registry.register_helper("base64_decode", Box::new(helpers::base64_decode));

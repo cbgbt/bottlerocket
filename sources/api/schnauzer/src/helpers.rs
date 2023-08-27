@@ -1544,6 +1544,9 @@ pub fn oci_defaults(
         }
         OciSpecSection::ResourceLimits => {
             let rlimits = oci_spec_resource_limits(oci_defaults_values)?;
+            let mut rlimits = rlimits.into_iter().collect::<Vec<(_, _)>>();
+            rlimits.sort();
+
             rlimits
                 .iter()
                 .map(|(rlimit_type, values)| runtime.get_resource_limits(rlimit_type, values))
@@ -1577,11 +1580,15 @@ fn oci_spec_capabilities(value: &Value) -> Result<String, RenderError> {
     let oci_default_capabilities: HashMap<OciDefaultsCapability, bool> =
         serde_json::from_value(value.clone())?;
 
+    let mut oci_default_capabilities: Vec<(OciDefaultsCapability, bool)> =
+        oci_default_capabilities.into_iter().collect::<Vec<_>>();
+    oci_default_capabilities.sort();
+
     // Output the capabilities that are enabled
     let mut capabilities_lines: Vec<String> = oci_default_capabilities
         .iter()
-        .filter(|(_, &capability_enabled)| capability_enabled)
-        .map(|(&capability, _)| format!("\"{}\"", capability.to_linux_string()))
+        .filter(|(_, capability_enabled)| *capability_enabled)
+        .map(|(capability, _)| format!("\"{}\"", capability.to_linux_string()))
         .collect();
 
     // Sort for consistency for human-readers of the OCI spec defaults file.

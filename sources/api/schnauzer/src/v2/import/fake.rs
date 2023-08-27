@@ -29,18 +29,51 @@ impl FakeSettingsResolver {
     pub fn new(settings: serde_json::Value) -> Self {
         Self { settings }
     }
+
+    fn minimize_settings<I>(
+        all_settings: &serde_json::Map<String, serde_json::Value>,
+        extension_requirements: I,
+    ) -> serde_json::Map<String, serde_json::Value>
+    where
+        I: Iterator<Item = ExtensionRequirement>,
+    {
+        // TODO: Extension version is disregarded until extensions are implemented on the API side.
+        extension_requirements
+            // TODO: Disambiguate unset settings vs extension not installed in the API.
+            // This isn't possible until extensions are implemented on the API side, so here empty
+            // requested settings always silently proceed.
+            .filter_map(|extension_requirement| {
+                let setting_name = &extension_requirement.name;
+                all_settings
+                    .get(setting_name)
+                    .cloned()
+                    .map(|setting_value| (setting_name.to_string(), setting_value))
+            })
+            // Collect errors from fetching the settings before merging
+            .collect()
+    }
+
+    fn extract_key_from_api_response(
+        key: &str,
+        response: &serde_json::Map<String, serde_json::Value>,
+    ) -> serde_json::Map<String, serde_json::Value> {
+        response.get(key).unwrap().as_object().cloned().unwrap()
+    }
 }
 
 #[async_trait]
 impl SettingsResolver for FakeSettingsResolver {
     async fn fetch_settings<I>(
         &self,
-        _extension_requirements: I,
+        extension_requirements: I,
     ) -> std::result::Result<serde_json::Value, Box<dyn std::error::Error>>
     where
         I: Iterator<Item = ExtensionRequirement> + Send,
     {
-        Ok(self.settings.clone())
+        let settings =
+            Self::extract_key_from_api_response("settings", &self.settings.as_object().unwrap());
+        let minimized = Self::minimize_settings(&settings, extension_requirements);
+        Ok(serde_json::json!({"settings": minimized}))
     }
 }
 
