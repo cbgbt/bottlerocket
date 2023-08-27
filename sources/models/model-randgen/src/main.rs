@@ -45,7 +45,7 @@ where
     }
 }
 
-const NUM_GEN: usize = 5000;
+const NUM_GEN: usize = 100;
 
 fn main() {
     let outdir = PathBuf::from(std::env::args().nth(1).unwrap());

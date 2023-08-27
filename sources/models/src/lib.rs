@@ -1062,9 +1062,21 @@ impl TestDataProviderForOciDefaults for OciDefaults {
 )]
 struct OciDefaultsResourceLimit {
     #[serde(deserialize_with = "deserialize_limit")]
+    #[rand_derive(custom)]
     hard_limit: i64,
     #[serde(deserialize_with = "deserialize_limit")]
+    #[rand_derive(custom)]
     soft_limit: i64,
+}
+
+impl TestDataProviderForOciDefaultsResourceLimit for OciDefaultsResourceLimit {
+    fn generate_hard_limit<R:rand::Rng+ ?Sized>(rng: &mut R) -> i64 {
+        rng.gen_range(5000..9999)
+    }
+
+    fn generate_soft_limit<R:rand::Rng+ ?Sized>(rng: &mut R) -> i64 {
+        rng.gen_range(0..5000)
+    }
 }
 
 #[model(add_option = false)]
