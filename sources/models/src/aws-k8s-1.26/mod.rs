@@ -1,4 +1,4 @@
-use crate::modeled_types::Identifier;
+use modeled_types::Identifier;
 use crate::{
     AutoScalingSettings, AwsSettings, BootSettings, BootstrapContainer, CloudFormationSettings,
     ContainerRuntimeSettings, DnsSettings, HostContainer, KernelSettings, KubernetesSettings,
