@@ -2,10 +2,7 @@
 resolver = "1"
 members = [
     "api/datastore",
-    "api/apiclient",
     "api/migration/migration-helpers",
-
-    "api/schnauzer",
 
     "bottlerocket-release",
     "constants",
@@ -51,7 +48,6 @@ members = [
 ]
 
 [workspace.dependencies]
-apiclient = { version = "0.1", path = "api/apiclient" }
 bottlerocket-release = { version = "0.1", path = "bottlerocket-release" }
 constants = { version = "0.1", path = "constants" }
 datastore = { version = "0.1", path = "api/datastore" }
@@ -59,7 +55,6 @@ generate-readme = { version = "0.1", path = "generate-readme" }
 migration-helpers = { version = "0.1.0", path = "api/migration/migration-helpers" }
 models = { version = "0.1", path = "models" }
 retry-read = { version = "0.1", path = "retry-read" }
-schnauzer = { version = "0.1", path = "api/schnauzer" }
 
 abi_stable = "0.11.3"
 argh = "0.1"

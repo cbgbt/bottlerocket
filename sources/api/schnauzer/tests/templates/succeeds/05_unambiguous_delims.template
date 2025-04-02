@@ -1,7 +1,0 @@
-[required-extensions]
-beagle = """
-+++
-"""
-std = { version = "v1", helpers = ["join_map"] }
-+++
-{{ join_map "=" "," "fail-if-missing" settings.beagle }}

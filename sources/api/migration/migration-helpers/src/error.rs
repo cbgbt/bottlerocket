@@ -78,22 +78,6 @@ pub enum Error {
         source: Box<datastore::Error>,
     },
 
-    #[snafu(display("Unable to build handlebar template registry: {}", source))]
-    BuildTemplateRegistry { source: schnauzer::v1::error::Error },
-
-    #[snafu(display("Unable to render template string '{}': {}", template, source))]
-    RenderTemplate {
-        template: String,
-        #[snafu(source(from(handlebars::RenderError, Box::new)))]
-        source: Box<handlebars::RenderError>,
-    },
-
-    #[snafu(display("Unable to render template command '{}': {}", cmdline, source))]
-    RenderSchnauzerV2Template {
-        cmdline: String,
-        source: schnauzer::v2::cli::CLIError,
-    },
-
     #[snafu(display("'{}' is set to non-string value", setting))]
     NonStringSettingDataType { setting: String },
 
