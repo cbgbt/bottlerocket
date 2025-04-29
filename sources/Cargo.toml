@@ -47,6 +47,8 @@ members = [
     "settings-plugins/vmware-k8s",
 
     "constants",
+    
+    "ci/settings-migration-lint",
 ]
 
 [workspace.dependencies]
@@ -59,6 +61,7 @@ models = { version = "0.1", path = "models" }
 retry-read = { version = "0.1", path = "retry-read" }
 
 abi_stable = "0.11.3"
+anyhow = "1"
 argh = "0.1"
 async-trait = "0.1"
 aws-lc-rs = "1"
@@ -74,15 +77,18 @@ http = "0.2"
 httparse = "1"
 hyper = { version = "0.14", default-features = false }
 hyper-unix-connector = "0.2"
+jsonrpsee-types = "0.25"
 lazy_static = "1"
 libc = "0.2"
 log = "0.4"
+lsp-types = "0.97"
 maplit = "1.0"
 nix = "0.26"
 num_cpus = "1"
 percent-encoding = "2"
 pest = "2.5"
 pest_derive = "2.5"
+proc-macro2 = "1"
 rand = "0.8"
 regex = "1"
 reqwest = { version = "0.12", default-features = false }
@@ -95,6 +101,7 @@ shlex = "1"
 signal-hook = "0.3"
 simplelog = "0.12"
 snafu = "0.8"
+syn = "2"
 tokio = { version = "~1.43", default-features = false }
 tokio-tungstenite = { version = "0.20", default-features = false }
 toml = "0.8"
